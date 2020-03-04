@@ -19,6 +19,41 @@
         - docker_install_compose: true
 
   tasks:
-    - name: "test hallo"
-      shell: "echo hello"
+    - name: "Render docker compose"
+      template:
+        src: "templates/docker-compose.yml.j2"
+        dest: "/root/docker-compose.yml"
+
+    - name: "Start mariadb image"
+      command: "docker-compose up -d dj-mariadb"
+      args:
+        chdir: "/root"
+
+    - name: "Start domserver"
+      command: "docker-compose up -d dj-domserver"
+      args:
+        chdir: "/root"
+
+    - name: "Save admin password"
+      shell: "docker-compose logs dj-domserver | grep --color=never 'Initial admin'"
+      register: "admin_password"
+
+    - name: "Show admin password"
+      debug:
+        msg: "ADMIN PASSWORD: {{ admin_password.stdout }}"
+
+    - name: "run the remainder of the services"
+      command: "docker-compose up -d"
+
+    - name: "Copy admin password to you (the deployer)"
+      fetch:
+        src: "/root/ADMIN"
+        dest: "/tmp/DOMJUDGE_PASSWORD"
+        flat: "yes"
+
+    - name: "Delete password on remote"
+      file:
+        path: "/root/ADMIN"
+        state: "absent"
+
 
