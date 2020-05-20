@@ -12,13 +12,33 @@
         upgrade: yes
         update_cache: yes
         cache_valid_time: 86400 #One day
-         
+
   roles:
     - role: geerlingguy.docker
       vars:
         - docker_install_compose: true
 
   tasks:
+    # This overrides the options passed to the Linux kernel by Grub to enable
+    # behaviour that Domjudge needs. See:
+    # https://www.domjudge.org/docs/manual/install-judgehost.html#linux-control-groups
+    # By writing this to a file named "99-..." we ensure that this file is
+    # loaded last and overrides the earlier override set by DigitalOcean.
+    - name: "Ensure required CGroup options are set"
+      copy:
+        content: 'GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 cgroup_enable=memory swapaccount=1"'
+        dest: "/etc/default/grub.d/99-sticky-domjudge-options.cfg"
+      register: "cmdline_file_result"
+
+    - name: "Rebuild grub if cmdline option changed"
+      command: "update-grub"
+      when: "cmdline_file_result.changed"
+
+    - name: "Reboot and wait for server to come back up if cmdline option changed"
+      reboot:
+        msg: "Rebooting from Ansible to apply cmdline change."
+      when: "cmdline_file_result.changed"
+
     - name: "Render docker compose"
       template:
         src: "templates/docker-compose.yml.j2"
@@ -41,6 +61,7 @@
     - name: "Show admin password"
       debug:
         msg: "ADMIN PASSWORD: {{ admin_password.stdout }}"
+      when: "not ansible_check_mode"
 
     - name: "run the remainder of the services"
       command: "docker-compose up -d"
