@@ -12,7 +12,7 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 WorkingDirectory=/tmp
 
-ExecStart=caddy reverse-proxy --from 'https://domjudge.svsticky.nl' --to 'http://localhost:39777'
+ExecStart=/usr/local/bin/caddy reverse-proxy --from 'https://domjudge.svsticky.nl' --to 'http://localhost:39777'
 
 [Install]
 WantedBy=multi-user.target

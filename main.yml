@@ -39,11 +39,16 @@
         msg: "Rebooting from Ansible to apply cmdline change."
       when: "cmdline_file_result.changed"
 
-    - name: "Install Caddy (our webserver of choice)"
-      apt:
-        name:
-          - "caddy"
-        state: "present"
+    - set_fact:
+        caddy_checksum: "sha256:1445fa798ae714521cf5a161bd42a40f4f487caec1d87b86100b3f86e3ec1d80"
+    
+    - name: "download caddy and verify checksum"
+      get_url:
+        url: "https://github.com/caddyserver/caddy/releases/download/v2.0.0/caddy_2.0.0_linux_amd64.deb"
+        dest: "/usr/local/bin/caddy"
+        mode: "u+x"
+        checksum: "{{ caddy_checksum }}"
+      check_mode: "no"
 
     - name: "Copy Caddy systemd unit"
       template:
