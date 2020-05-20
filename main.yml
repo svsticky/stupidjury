@@ -61,6 +61,7 @@
     - name: "Show admin password"
       debug:
         msg: "ADMIN PASSWORD: {{ admin_password.stdout }}"
+      when: "not ansible_check_mode"
 
     - name: "run the remainder of the services"
       command: "docker-compose up -d"
