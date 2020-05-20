@@ -44,8 +44,6 @@
         src: "files/caddy"
         dest: "/usr/local/bin/caddy"
         mode: "0755"
-        checksum: "{{ caddy_checksum }}"
-      check_mode: "no"
 
     - name: "Copy Caddy systemd unit"
       template:
