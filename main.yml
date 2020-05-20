@@ -44,6 +44,17 @@
         src: "templates/docker-compose.yml.j2"
         dest: "/root/docker-compose.yml"
 
+    - name: "Create judgehost folder"
+      file:
+        path: "/root/judgehost"
+        state: "directory"
+        mode: "0700"
+
+    - name: "Render judgehost dockerfile"
+      template:
+        src: "templates/judgehost/Dockerfile"
+        dest: "/root/judgehost/Dockerfile"
+
     - name: "Start mariadb image"
       command: "docker-compose up -d dj-mariadb"
       args:
