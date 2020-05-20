@@ -39,21 +39,18 @@
         msg: "Rebooting from Ansible to apply cmdline change."
       when: "cmdline_file_result.changed"
 
-    - set_fact:
-        caddy_checksum: "sha256:1445fa798ae714521cf5a161bd42a40f4f487caec1d87b86100b3f86e3ec1d80"
-    
-    - name: "download caddy and verify checksum"
-      get_url:
-        url: "https://github.com/caddyserver/caddy/releases/download/v2.0.0/caddy_2.0.0_linux_amd64.deb"
+    - name: "Copy caddy"
+      copy:
+        src: "files/caddy"
         dest: "/usr/local/bin/caddy"
-        mode: "u+x"
+        mode: "0755"
         checksum: "{{ caddy_checksum }}"
       check_mode: "no"
 
     - name: "Copy Caddy systemd unit"
       template:
-        src: "templates/etc/system/systemd/caddy.service.j2"
-        dest: "/etc/system/systemd/caddy.service"
+        src: "templates/etc/systemd/system/caddy.service.j2"
+        dest: "/etc/systemd/system/caddy.service"
 
     - name: "Start Caddy"
       systemd:
@@ -110,5 +107,3 @@
       file:
         path: "/root/ADMIN"
         state: "absent"
-
-
