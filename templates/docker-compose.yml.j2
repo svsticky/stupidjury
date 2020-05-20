@@ -38,7 +38,9 @@ services:
       - JUDGEDAEMON_PASSWORD=domjudge
     links:
       - dj-domserver:domserver
-
+    ports:
+      - 39777:80
+      
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: myadmin

@@ -39,6 +39,24 @@
         msg: "Rebooting from Ansible to apply cmdline change."
       when: "cmdline_file_result.changed"
 
+    - name: "Install Caddy (our webserver of choice)"
+      apt:
+        name:
+          - "caddy"
+        state: "present"
+
+    - name: "Copy Caddy systemd unit"
+      template:
+        src: "templates/etc/system/systemd/caddy.service.j2"
+        dest: "/etc/system/systemd/caddy.service"
+
+    - name: "Start Caddy"
+      systemd:
+        unit: "caddy.service"
+        state: "started"
+        enabled: true
+        daemon-reload: true
+
     - name: "Render docker compose"
       template:
         src: "templates/docker-compose.yml.j2"
