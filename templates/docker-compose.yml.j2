@@ -5,10 +5,10 @@ services:
   dj-mariadb:
     image: mariadb
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpw
+      - MYSQL_ROOT_PASSWORD={{ vault.mysql_root_password }}
       - MYSQL_DATABASE=domjudge
       - MYSQL_USER=domjudge
-      - MYSQL_PASSWORD=djpw
+      - MYSQL_PASSWORD={{ vault.mysql_domjudge_password }}
     command:
       --max-connections=1000
 
@@ -18,10 +18,10 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     environment:
       - CONTAINER_TIMEZONE=Europe/Amsterdam
-      - MYSQL_ROOT_PASSWORD=rootpw
+      - MYSQL_ROOT_PASSWORD={{ vault.mysql_root_password }}
       - MYSQL_DATABASE=domjudge
       - MYSQL_USER=domjudge
-      - MYSQL_PASSWORD=djpw
+      - MYSQL_PASSWORD={{ vault.mysql_domjudge_password }}
     ports:
       - 127.0.0.1:9090:80
     links:
@@ -35,7 +35,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     environment:
       - DAEMON_ID=0
-      - JUDGEDAEMON_PASSWORD=domjudge
+      - JUDGEDAEMON_PASSWORD={{ vault.domjudge_judgehost_password }}
     links:
       - dj-domserver:domserver
 

@@ -13,6 +13,9 @@
         update_cache: yes
         cache_valid_time: 86400 #One day
 
+  vars_files:
+    - "vault.yml"
+
   roles:
     - role: geerlingguy.docker
       vars:
@@ -105,3 +108,17 @@
       file:
         path: "/root/ADMIN"
         state: "absent"
+
+    - name: "hash password for judgehost user"
+      command: "php -r 'print password_hash(\"{{ vault.domjudge_judgehost_password }}\", PASSWORD_DEFAULT);'"
+      register: "judgehost_pw_hash_result"
+
+    - name: "ensure Judgehost user exists"
+      command: >
+        docker exec -it root_dj-mariadb_1
+        mysql -prootpw --batch -e
+        "INSERT INTO user (username, name, password)
+        VALUES ('judgehost', 'User for Judgehosts', '{{ judgehost_pw_hash_result.stdout }}');
+        INSERT INTO userrole (userid, roleid) VALUES (last_insert_id, (SELECT roleid FROM role WHERE role = 'judgehost'));"
+        domjudge
+      ignore_errors: true
