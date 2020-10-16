@@ -105,18 +105,16 @@
     - name: "ensure admin user has the password we define"
       command: >
         docker exec -it root_dj-mariadb_1
-        mysql -p --batch -e
-        "INSERT INTO USER (username, name, password)
+        mysql -p{{ vault.mysql_root_password }} --batch -e
+        "INSERT INTO user (username, name, password)
         VALUES ('admin', 'Administrator', '{{ admin_pw_hash_result.stdout }}')
         ON DUPLICATE KEY UPDATE password='{{ admin_pw_hash_result.stdout }}';"
         domjudge
-      environment:
-        MYSQL_PWD: "{{ vault.mysql_root_password }}"
 
     - name: "ensure Judgehost user exists and has the password we define"
       command: >
         docker exec -it root_dj-mariadb_1
-        mysql -p --batch -e
+        mysql -p{{ vault.mysql_root_password }} --batch -e
         "INSERT INTO user (username, name, password)
         VALUES ('judgehost', 'User for Judgehosts', '{{ judgehost_pw_hash_result.stdout }}')
         ON DUPLICATE KEY UPDATE password='{{ judgehost_pw_hash_result.stdout }}';
@@ -126,5 +124,3 @@
           (SELECT roleid FROM role WHERE role = 'judgehost')
         );"
         domjudge
-      environment:
-        MYSQL_PWD: "{{ vault.mysql_root_password }}"
