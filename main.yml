@@ -86,39 +86,45 @@
       args:
         chdir: "/root"
 
-    - name: "Save admin password"
-      shell: "docker-compose logs dj-domserver | grep --color=never 'Initial admin'"
-      register: "admin_password"
-
-    - name: "Show admin password"
-      debug:
-        msg: "ADMIN PASSWORD: {{ admin_password.stdout }}"
-      when: "not ansible_check_mode"
-
     - name: "run the remainder of the services"
       command: "docker-compose up -d"
 
-    - name: "Copy admin password to you (the deployer)"
-      fetch:
-        src: "/root/ADMIN"
-        dest: "/tmp/DOMJUDGE_PASSWORD"
-        flat: "yes"
+    - name: "install php7.4-cli"
+      apt:
+        name: "php7.4-cli"
+        state: "present"
 
-    - name: "Delete password on remote"
-      file:
-        path: "/root/ADMIN"
-        state: "absent"
+    - name: "hash password for admin user"
+      command: "php -r 'print password_hash(\"{{ vault.domjudge_admin_password }}\", PASSWORD_DEFAULT);'"
+      register: "admin_pw_hash_result"
 
     - name: "hash password for judgehost user"
       command: "php -r 'print password_hash(\"{{ vault.domjudge_judgehost_password }}\", PASSWORD_DEFAULT);'"
       register: "judgehost_pw_hash_result"
 
-    - name: "ensure Judgehost user exists"
+    - name: "ensure admin user has the password we define"
       command: >
         docker exec -it root_dj-mariadb_1
-        mysql -prootpw --batch -e
-        "INSERT INTO user (username, name, password)
-        VALUES ('judgehost', 'User for Judgehosts', '{{ judgehost_pw_hash_result.stdout }}');
-        INSERT INTO userrole (userid, roleid) VALUES (last_insert_id, (SELECT roleid FROM role WHERE role = 'judgehost'));"
+        mysql -p --batch -e
+        "INSERT INTO USER (username, name, password)
+        VALUES ('admin', 'Administrator', '{{ admin_pw_hash_result.stdout }}')
+        ON DUPLICATE KEY UPDATE password='{{ admin_pw_hash_result.stdout }}';"
         domjudge
-      ignore_errors: true
+      environment:
+        MYSQL_PWD: "{{ vault.mysql_root_password }}"
+
+    - name: "ensure Judgehost user exists and has the password we define"
+      command: >
+        docker exec -it root_dj-mariadb_1
+        mysql -p --batch -e
+        "INSERT INTO user (username, name, password)
+        VALUES ('judgehost', 'User for Judgehosts', '{{ judgehost_pw_hash_result.stdout }}')
+        ON DUPLICATE KEY UPDATE password='{{ judgehost_pw_hash_result.stdout }}';
+
+        INSERT IGNORE INTO userrole (userid, roleid) VALUES (
+          (SELECT userid FROM user WHERE username = 'judgehost'),
+          (SELECT roleid FROM role WHERE role = 'judgehost')
+        );"
+        domjudge
+      environment:
+        MYSQL_PWD: "{{ vault.mysql_root_password }}"
