@@ -86,9 +86,6 @@
       args:
         chdir: "/root"
 
-    - name: "run the remainder of the services"
-      command: "docker-compose up -d"
-
     - name: "install php7.4-cli"
       apt:
         name: "php7.4-cli"
@@ -124,3 +121,6 @@
           (SELECT roleid FROM role WHERE role = 'judgehost')
         );"
         domjudge
+
+    - name: "run the remainder of the services"
+      command: "docker-compose up -d"
