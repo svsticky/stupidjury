@@ -4,10 +4,10 @@ This Ansible playbook sets up a DomJudge server, used for coding competitions or
 
 ## Prerequisites
 
-- A Ubuntu 18.04 VPS
-- A local installation of Ansible
+- A Ubuntu 20.04 VPS
+- A local installation of Ansible (`sudo apt install ansible`)
 
 ## Setting up
 
-1. Set up the needed secrets
-2. Run ```ansible-playbook main.yml -i hosts```
+1. Create a file called `vault-pass` with the vault password
+2. Run `./deploy.sh`
