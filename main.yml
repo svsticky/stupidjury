@@ -76,6 +76,11 @@
         src: "templates/judgehost/Dockerfile"
         dest: "/root/judgehost/Dockerfile"
 
+    - name: "Copy install_languages script"
+      template:
+        src: "templates/judgehost/install_languages.sh"
+        dest: "/root/judgehost/install_languages.sh"
+
     - name: "Start mariadb image"
       command: "docker-compose up -d dj-mariadb"
       args:
@@ -123,4 +128,7 @@
         domjudge
 
     - name: "run the remainder of the services"
-      command: "docker-compose up -d"
+      command: "docker-compose up --build -d"
+
+    - name: "run install_languages"
+      command: "docker exec -it root_dj-judgehost_1 /install_languages.sh"
